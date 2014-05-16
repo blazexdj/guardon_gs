@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" 
+						"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+						
+<sqlMap namespace="Bbs">
+	<typeAlias alias="bbs" type="com.nanugofarm.common.services.domain.Bbs"/>
+	<typeAlias alias="pageInfo" type="com.nanugofarm.common.services.domain.PageInfo"/>
+	<typeAlias alias="comm" type="com.nanugofarm.common.services.domain.Comm"/>
+
+
+
+	<select id="getBbsList" parameterClass="pageInfo" resultClass="bbs">
+		SELECT * FROM
+		(SELECT  ROWNUM AS R, a.* ,
+		(SELECT user_nick FROM TBL_USER u WHERE u.user_id = a.user_id) AS userNick FROM
+		(SELECT /*+ INDEX_DESC(b pk_tbl_bbs) */
+			b.farm_id AS farmId,
+			b.bbs_ctgry_code AS bbsCtgryCode, 
+			LPAD(' ', b.bbs_depth*4, ' ')||b.bbs_no AS bbsNo,
+			SUBSTR(b.bbs_title, 1, 60) AS bbsTitle,
+			TO_CHAR(b.bbs_reg_date,  'YYYY-MM-DD HH24:MI:SS') AS bbsRegDate,
+			TO_CHAR(b.bbs_change_date, 'YYYY-MM-DD HH24:MI:SS') AS bbsChangeDate,
+			b.bbs_readcnt AS bbsReadcnt, 
+			b.bbs_commcnt AS bbsCommcnt,
+			b.bbs_votecnt AS bbsVotecnt, 
+			b.bbs_group_no AS bbsGroupNo, 
+			b.bbs_order AS bbsOrder, 
+			b.bbs_depth AS bbsDepth, 
+			b.bbs_parent_no AS bbsParentNo,
+			h.bbs_hd_code AS bbsHdCode, 
+			h.bbs_hd AS bbsHd,
+			b.bbs_del_yn AS bbsDelYn,
+            b.user_id,
+            COUNT(b.bbs_no) OVER() AS bbsCnt
+		FROM tbl_bbs b, tbl_bbs_hd_mst h
+		<dynamic prepend="WHERE">
+			1=1
+			<isNotEmpty property="search">
+			<isNotEmpty property="spec" open="AND">
+				<iterate property="spec" conjunction="OR" open="(" close=")">
+					LOWER(b.$spec[]$) LIKE #search# 
+				</iterate>
+			</isNotEmpty>
+			</isNotEmpty>	
+		</dynamic>
+		AND b.bbs_hd_code = h.bbs_hd_code(+) 
+		AND b.farm_id = #fId#
+		AND b.bbs_ctgry_code = #bCtgryCode#
+		AND b.bbs_public_yn='Y'
+		AND ROWNUM BETWEEN 1 AND CEIL(#currPage#/10)*#BBS_VIEW#*10+1
+		<dynamic>
+			<isNotEmpty property="sort">
+				<isNotEqual property="sort" compareValue="day">
+					<isEqual property="sort" compareValue="readcnt">
+						ORDER BY bbsReadcnt DESC
+					</isEqual>
+					<isEqual property="sort" compareValue="votecnt">
+						ORDER BY bbsVotecnt DESC
+					</isEqual>
+					) a ) WHERE R>#start# AND #end#>=R 
+				</isNotEqual>
+				<isEqual property="sort" compareValue="day">
+					ORDER BY bbsGroupNo DESC, bbsOrder ASC) a )
+					WHERE R>#start# AND #end#>=R 
+					ORDER BY bbsGroupNo DESC, bbsOrder ASC
+				</isEqual>
+			</isNotEmpty>	
+			<isEmpty property="sort">
+				ORDER BY bbsGroupNo DESC, bbsOrder ASC) a )
+				WHERE R>#start# AND #end#>=R 
+				ORDER BY bbsGroupNo DESC, bbsOrder ASC
+			</isEmpty>
+		</dynamic>
+	</select>
+
+
+	<select id="getBbs" parameterClass="pageInfo" resultClass="bbs">
+		SELECT 
+			b.farm_id AS farmId,
+			b.bbs_ctgry_code AS bbsCtgryCode, 
+			b.bbs_no AS bbsNo,
+			b.bbs_title AS bbsTitle,
+			b.bbs_content AS bbsContent,
+			b.bbs_reg_date AS bbsRegDate,
+			b.bbs_change_date AS bbsChangeDate,
+			b.bbs_readcnt AS bbsReadcnt, 
+			b.bbs_commcnt AS bbsCommcnt,
+			b.bbs_votecnt AS bbsVotecnt, 
+			b.bbs_group_no AS bbsGroupNo, 
+			b.bbs_order AS bbsOrder, 
+			b.bbs_depth AS bbsDepth,
+			b.bbs_parent_no AS bbsParentNo,
+			u.user_nick AS userNick,
+			u.user_id AS userId,
+			h.bbs_hd_code AS bbsHdCode, 
+			h.bbs_hd AS bbsHd, 
+			b.bbs_del_yn AS bbsDelYn
+		FROM tbl_bbs b, tbl_user u, tbl_bbs_hd_mst h 
+		WHERE b.user_id = u.user_id
+		AND b.bbs_hd_code = h.bbs_hd_code
+		AND b.farm_id = #fId# 
+		AND b.bbs_no=#bNo#
+		AND b.bbs_ctgry_code = #bCtgryCode# 
+	</select>
+	
+	
+	<insert id="insertBbs" parameterClass="bbs">
+		INSERT INTO 
+		tbl_bbs(farm_id, bbs_ctgry_code, bbs_no, bbs_title, bbs_content, user_id, bbs_reg_date, 
+						bbs_change_date, bbs_readcnt, bbs_commcnt, bbs_votecnt, bbs_public_yn, 
+						bbs_del_yn, bbs_group_no, bbs_order, bbs_depth, bbs_parent_no, bbs_hd_code) 
+		VALUES(
+			#farmId#,
+			#bbsCtgryCode#,
+			#bbsNo#, 
+			#bbsTitle#,
+			#bbsContent#,
+			#userId#,
+			default ,
+			default, 
+			default,
+			default, 
+			default, 
+			default,
+			default, 			
+			#bbsNo#,
+			default,
+			default, 
+			default, 
+			#bbsHdCode#  )
+	</insert>
+	
+
+	<insert id="insertReply" parameterClass="bbs">
+		INSERT INTO 
+		tbl_bbs(farm_id, bbs_ctgry_code, bbs_no, bbs_title, bbs_content, user_id, bbs_reg_date, 
+						bbs_change_date, bbs_readcnt, bbs_commcnt, bbs_votecnt, bbs_public_yn, 
+						bbs_del_yn, bbs_group_no, bbs_order, bbs_depth, bbs_parent_no, bbs_hd_code)  
+		VALUES(
+			#farmId#,
+			#bbsCtgryCode#,
+			#bbsNo#, 
+			#bbsTitle#,
+			#bbsContent#,
+			#userId#,
+			default,
+			default, 
+			default,
+			default, 
+			default, 
+			default,
+			default,
+			#bbsGroupNo#,
+			#bbsOrder#,
+			#bbsDepth#, 
+			#bbsParentNo#,
+			#bbsHdCode# )
+	</insert>
+
+
+	<update id="updateBbs" parameterClass="bbs">
+	UPDATE tbl_bbs
+	SET bbs_title = #bbsTitle#,
+			bbs_content = #bbsContent#,
+			bbs_change_date = SYSDATE
+	WHERE farm_id = #farmId#
+	AND bbs_ctgry_code = #bbsCtgryCode#
+	AND bbs_no = #bbsNo#		
+	</update>
+
+
+	<update id="updateBbsReadcnt" parameterClass="bbs">
+		UPDATE tbl_bbs
+		SET bbs_readcnt = bbs_readcnt+1
+		WHERE  farm_id = #farmId#
+		AND bbs_ctgry_code = #bbsCtgryCode#
+		AND bbs_no = #bbsNo#	
+	</update>
+	
+
+	<procedure id="delBbs" parameterClass="pageInfo">
+		{ call sp_del_tbl_bbs(#fId#, #bCtgryCode#, #bNo#) }
+	</procedure>
+	
+	
+	<select id="getMaxBbsNo" parameterClass="bbs" resultClass="int">
+		SELECT MAX(bbs_no)+1 
+		FROM tbl_bbs 
+		WHERE farm_id = #farmId#
+		AND bbs_ctgry_code = #bbsCtgryCode#  
+	</select>
+	
+
+	<select id="getBbsHd" parameterClass="int" resultClass="bbs">
+		SELECT bbs_hd_code AS bbsHdCode, 
+						bbs_hd AS bbsHd 
+		FROM tbl_bbs_hd_mst
+		WHERE bbs_ctgry_code = #value#
+	</select>
+	
+	
+	
+
+	<select id="getCommList" parameterClass="pageInfo" resultClass="comm">
+ 		SELECT * FROM 
+		(SELECT ROWNUM AS R, a.*,
+		(SELECT user_nick FROM TBL_USER u WHERE u.user_id = a.user_id) AS userNick FROM  
+		(SELECT /*+ index_desc(tbl_bbs_comm pk_tbl_bbs_comm) */
+ 		 	farm_id AS farmId,
+ 		 	bbs_ctgry_code AS bbsCtgryCode,
+ 		 	bbs_no AS bbsNo,
+	 		comm_no AS commNo, 
+	 		comm_content AS commContent, 
+	 		TO_CHAR(comm_reg_date, 'YYYY-MM-DD HH24:MI:SS') AS commRegDate, 
+	 		comm_parent_no AS commParentNo, 
+	 		comm_del_yn AS commDelYn, 
+	 		LEVEL AS commDepth, 
+            user_id,
+	 		COUNT(comm_no) OVER() AS commCnt
+ 		 FROM  tbl_bbs_comm
+ 		 START WITH comm_parent_no = 0
+ 		 AND farm_id = #fId#
+		 AND bbs_ctgry_code = #bCtgryCode#
+ 		 AND bbs_no = #bNo#
+ 		 CONNECT BY comm_parent_no = PRIOR comm_no
+ 		 AND farm_id = #fId#
+		 AND bbs_ctgry_code = #bCtgryCode#
+ 		 AND bbs_no = #bNo#) a )
+         WHERE R>#start# AND #end#>=R
+	</select>
+	
+	<select id="getComm" parameterClass="int" resultClass="comm">
+		SELECT
+			c.farm_id AS farmId,
+ 		 	c.bbs_ctgry_code AS bbsCtgryCode,
+ 		 	c.bbs_no AS bbsNo, 
+			c.comm_no AS commNo, 
+	 		c.comm_content AS commContent, 
+	 		c.comm_reg_date AS commRegDate, 
+	 		u.user_nick AS userNick, 
+	 		c.comm_parent_no AS commParentNo, 
+	 		c.comm_del_yn AS commDelYn, 
+	 		c.bbs_no AS bbsNo
+		FROM tbl_bbs_comm c, tbl_user u
+		WHERE c.user_id = u.user_id
+		AND c.farm_id = #farmId#
+		AND c.bbs_ctgry_code = #bbsCtgryCode#
+		AND c.bbs_no = #bbsNo#
+		AND c.comm_no = #commNo#
+	</select>
+
+
+	<insert id="insertComm" parameterClass="comm">
+		INSERT INTO      
+		tbl_bbs_comm (farm_id, bbs_ctgry_code, bbs_no, comm_no, comm_content, comm_reg_date, 
+									user_id, comm_parent_no, comm_del_yn)
+		VALUES(#farmId#,
+			    		#bbsCtgryCode#,
+						#bbsNo#,
+						#commNo#, 
+						#commContent#,  
+						default,
+						#userId#,
+						default,
+						default )
+	</insert>
+	
+
+	<insert id="insertCommRe" parameterClass="comm">
+		INSERT INTO 
+		tbl_bbs_comm (farm_id, bbs_ctgry_code, bbs_no, comm_no, comm_content, comm_reg_date, 
+									user_id, comm_parent_no, comm_del_yn)
+		VALUES(#farmId#,
+						#bbsCtgryCode#,
+						#bbsNo#,
+						#commNo#, 
+						#commContent#, 
+						default,
+						#userId#,
+						#commParentNo#, 
+						default)
+	</insert> 
+
+
+	<update id="updateComm" parameterClass="comm">
+		UPDATE tbl_bbs_comm
+		SET comm_content = #commContent#,
+				comm_reg_date = SYSDATE 
+		WHERE farm_id = #farmId#
+		AND bbs_ctgry_code = #bbsCtgryCode#
+		AND bbs_no = #bbsNo#
+		AND comm_no = #commNo#
+	</update>
+
+
+	<procedure id="delComm" parameterClass="pageInfo">
+		{ call sp_del_tbl_bbs_comm(#fId#, #bCtgryCode#, #bNo#, #cNo#) }
+	</procedure>
+
+
+	<select id="getMaxCommNo" parameterClass="comm" resultClass="int">
+		SELECT NVL(MAX(comm_no)+1, 1) 
+		FROM tbl_bbs_comm 
+		WHERE farm_id = #farmId#
+		AND bbs_ctgry_code = #bbsCtgryCode# 
+		AND bbs_no = #bbsNo# 
+	</select>
+	
+
+	<select id="getVoteDupl" parameterClass="pageInfo" resultClass="int">
+		SELECT COUNT(*) 
+		FROM tbl_bbs_vote 
+		WHERE farm_id = #fId#
+		AND bbs_ctgry_code = #bCtgryCode# 
+		AND bbs_no = #bNo# 
+		AND user_id = #uId#
+	</select>
+
+
+	<insert id="insertBbsVoteUser" parameterClass="pageInfo">
+		INSERT INTO tbl_bbs_vote(farm_id, bbs_ctgry_code, bbs_no, user_id) 
+		VALUES (#fId#, #bCtgryCode#, #bNo#, #uId#)
+	</insert>
+
+
+	<update id="updateBbsVotecnt" parameterClass="pageInfo">
+		UPDATE tbl_bbs
+		SET bbs_votecnt = bbs_votecnt+1
+		WHERE farm_id = #fId#
+		AND bbs_ctgry_code = #bCtgryCode#
+		AND bbs_no = #bNo#	
+	</update>	
+	
+
+	<delete id="delBbsVote" parameterClass="pageInfo">
+		DELETE FROM tbl_bbs_vote
+		WHERE farm_id = #fId#
+		AND bbs_ctgry_code = #bCtgryCode#
+		AND bbs_no = #bNo#
+	</delete>
+
+	
+</sqlMap>

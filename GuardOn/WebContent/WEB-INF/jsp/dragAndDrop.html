@@ -1,0 +1,143 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>jQuery: Customizable layout using drag and drop (examples) - 1. Getting started with sortable lists</title>
+	<link rel="stylesheet" type="text/css" href="drag1.css" media="screen" />
+	<link rel="stylesheet" type="text/css" href="drag2.css" media="screen" />
+
+</head>
+<body class="dhe-body">
+
+<div id="center-wrapper">
+
+
+
+<div id="workflow">
+
+				<p><input type="submit" class="input-button" id="btn-get" value="Get items" /></p>
+
+				<div class="column left first">
+
+					<ul class="sortable-list">
+						<li class="sortable-item" id="A">Sortable item A</li>
+						<li class="sortable-item" id="B">Sortable item B</li>
+					</ul>
+
+				</div>
+
+				<div class="column left">
+
+					<ul class="sortable-list">
+						<li class="sortable-item" id="C">Sortable item C</li>
+						<li class="sortable-item" id="D">Sortable item D</li>
+					</ul>
+
+				</div>
+
+				<div class="column left">
+
+					<ul class="sortable-list">
+						<li class="sortable-item" id="E">Sortable item E</li>
+					</ul>
+
+				</div>
+
+			</div>
+
+			<div class="clearer">&nbsp;</div>
+
+			<!-- END: XHTML for example 2.1 --> 
+
+		</div>
+
+
+
+<!--
+			<div id="example-1-4">
+
+				<div id="containment">
+
+					<div class="column left first">
+
+						<ul class="sortable-list">
+							<li class="sortable-item" value=""><input type="text" class="textbox"/></li>
+							<li class="sortable-item"><input type="text" class="textbox"/></li>
+						</ul>
+
+					</div>
+
+					<div class="column left">
+
+						<ul class="sortable-list">
+							<li class="sortable-item"><input type="text" class="textbox"/></li>
+							<li class="sortable-item"><input type="text" class="textbox"/></li>
+						</ul>
+
+					</div>
+
+					<div class="column left">
+
+						<ul class="sortable-list">
+							<li class="sortable-item"><input type="text" class="textbox"/></li>
+						</ul>
+
+					</div>
+                    
+                    <div class="column left">
+                    	<ul class="sortable-list">
+						</ul>
+                    </div>
+                    <div class="column left">
+                    	<ul class="sortable-list">
+						</ul>
+                    </div>
+                    
+
+					<div class="clearer">&nbsp;</div>
+
+				</div>
+
+			</div>
+
+			<!-- END: XHTML for example 1.4 -->
+
+<!-- Example JavaScript files -->
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.0/jquery-ui.min.js"></script>
+
+<!-- Example jQuery code (JavaScript)  -->
+<script type="text/javascript">
+
+function getItems(exampleNr)
+	{
+		var columns = [];
+
+		$(exampleNr + ' ul.sortable-list').each(function(){
+			columns.push($(this).sortable('toArray'));				
+		});
+
+		return columns.join('|');
+	}
+
+
+$(document).ready(function(){
+	$('#example-1-4 .sortable-list').sortable({
+		connectWith: '#example-1-4 .sortable-list',
+		containment: '#containment'
+	});
+});
+
+$('#workflow .sortable-list').sortable({
+		connectWith: '#workflow .sortable-list'
+	});
+
+	$('#btn-get').click(function(){
+		alert(getItems('#workflow'));
+	});
+
+
+</script>
+
+</body>
+</html>

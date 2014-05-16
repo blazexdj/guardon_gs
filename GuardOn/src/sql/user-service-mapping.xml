@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" 
+						"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+						
+<sqlMap namespace="User">
+	<typeAlias alias="user" type="com.guardon.user.domain.User"/>
+	
+	<resultMap class="user" id="resultUser">
+		<result property="userId" column="userId" />
+		<result property="userPwd" column="userPwd" />
+		<result property="userName" column="userName" />
+		<result property="userType" column="userType" />
+		<result property="userDepartment" column="userDepartment" />
+		<result property="userLevel" column="userLevel" />
+		<result property="userEmail" column="userEmail" />
+		<result property="phoneNumber" column="phoneNumber" />
+		<result property="joinDate" column="joinDate" />
+		<result property="pwdLevel" column="pwdLevel" />		
+		<result property="userLoginDate" column="userLoginDate" jdbcType="DATE"/>
+		<result property="userGetOptDate" column="userGetOptDate" jdbcType="DATE" />
+		<result property="outStartPerDate" column="outStartPerDate" jdbcType="DATE" />
+		<result property="approvalDate" column="approvalDate" jdbcType="DATE" />
+		<result property="outEndPerDate" column="outEndPerDate" jdbcType="DATE"/>
+		<result property="userLogoutDate" column="userLogoutDate" jdbcType="DATE"/>
+		
+		
+	</resultMap>
+	
+	<insert id="insertUser" parameterClass="user">
+		INSERT INTO 
+		tbl_user(userName, userId, userPwd, userDepartment, userLevel, companyNumber, userEmail, phoneNumber, joinDate, totalRequestCount, totalApprovalCount, totalRejectCount, userType)
+		VALUES(#userName#, #userId#, #userPwd#, #userDepartment#, #userLevel#, #companyNumber#, #userEmail#, #phoneNumber#, #joinDate#, 0, 0, 0, #userType#);
+	</insert>
+	
+	<update id="updateUser" parameterClass="user">
+		UPDATE tbl_user 
+		SET userName = #userName#, 
+		userPwd = #userPwd#, 
+		userDepartment = #userDepartment#, 
+		userLevel = #userLevel#, 
+		companyNumber = #companyNumber#, 
+		userEmail = #userEmail#, 
+		phoneNumber = #phoneNumber#
+		WHERE userId = #userId#
+	</update>
+	
+	<select id="getUserBasicInfo" parameterClass="string" resultClass="user">
+		SELECT userName, userDepartment, userLevel, companyNumber, userEmail, phoneNumber 
+		FROM tbl_user
+		WHERE userId = #value#
+	</select>
+	
+	<select id="getUserPwd" parameterClass="string" resultClass="string">
+		SELECT userPwd 
+		FROM tbl_user
+		WHERE userId = #value#
+	</select>
+	
+	<select id="getUserName" parameterClass="string" resultClass="string">
+		SELECT userName 
+		FROM tbl_user
+		WHERE userId = #value#
+	</select>
+	
+	<select id="getUserType" parameterClass="string" resultClass="string">
+		SELECT userType 
+		FROM tbl_user
+		WHERE userId = #value#
+	</select>
+	
+	<select id="getUserDepartment" parameterClass="string" resultClass="string">
+		SELECT userDepartment 
+		FROM tbl_user
+		WHERE userId = #value#
+	</select>
+	
+	<select id="getUserList" parameterClass="int" resultClass="user">
+		SELECT userId, userName, phoneNumber, userDepartment, userLevel, userEmail 
+		FROM tbl_user; 
+	</select>
+	<!--  limit $value$*1-1, 1 -->
+	
+	<select id="getWfUserList" parameterClass="int" resultClass="user">
+		SELECT userId, userName, phoneNumber, userDepartment, userLevel, userEmail 
+		FROM tbl_user
+		WHERE userType NOT IN ('outUser')
+	</select>
+	
+	<update id="setActive" parameterClass="string">
+		UPDATE tbl_user 
+		SET active = true
+		WHERE userId = #userId#
+	</update>
+	
+	<update id="setDeactive" parameterClass="string">
+		UPDATE tbl_user 
+		SET active = false
+		WHERE userId = #userId#
+	</update>
+	
+	<select id="isActive" parameterClass="string" resultClass="boolean">
+		SELECT active
+		FROM tbl_user
+		WHERE userId=#userId# 
+	</select>
+	
+	<select id="getUserId" parameterClass="string" resultClass="string" >
+		SELECT COUNT(*)
+		FROM tbl_user
+		WHERE userId = #value#
+	</select>
+	
+</sqlMap>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" 
+						"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+						
+<sqlMap namespace="Report">
+	<typeAlias alias="logInfo" type="com.guardon.report.domain.LogInfo"/>
+	<typeAlias alias="approvalInfo" type="com.guardon.report.domain.ApprovalInfo"/>
+	
+	<!-- 
+	<typeAlias alias="rejectInfo" type="com.guardon.report.domain.RejectInfo"/>
+	 -->
+	 
+	<resultMap class="logInfo" id="resultLogInfo">
+		<result property="userName" column="userName" />
+		<result property="userDepartment" column="userDepartment" />
+		<result property="userLevel" column="userLevel" />
+		<result property="userType" column="userType" />
+		<result property="userId" column="userId" />
+		<result property="loginTime" column="loginTime" />
+		<result property="logoutTime" column="logoutTime" />
+		<result property="requestCount" column="requestCount" />
+		<result property="approvalCount" column="approvalCount" />
+		<result property="rejectCount" column="rejectCount" />		
+	</resultMap>
+	
+	<resultMap class="approvalInfo" id="resultApprovalInfo">
+		<result property="userName" column="userName" />
+		<result property="userDepartment" column="userDepartment" />
+		<result property="userLevel" column="userLevel" />
+		<result property="userType" column="userType" />
+		<result property="userId" column="userId" />
+		<result property="approvalDate" column="approvalDate" />
+		<result property="requestDate" column="requestDate" />
+		<result property="pwdType" column="pwdType" />
+		<result property="approvalId" column="approvalId" />
+		<result property="serverName" column="serverName" />	
+		<result property="requestDesc" column="requestDesc" />
+		<result property="approved" column="approved" />	
+		<result property="connectId" column="connectId" />		
+	</resultMap>
+	
+	<!-- 
+	<resultMap class="rejectInfo" id="resultRejectInfo">
+		<result property="userName" column="userName" />
+		<result property="userDepartment" column="userDepartment" />
+		<result property="userLevel" column="userLevel" />
+		<result property="userType" column="userType" />
+		<result property="userId" column="userId" />
+		<result property="approvalTime" column="approvalTime" />
+		<result property="pwdType" column="pwdType" />
+		<result property="approvalId" column="approvalId" />
+		<result property="rejectReason" column="rejectReaon" />		
+	</resultMap>
+		 -->
+		<!-- 
+	<select id="getRejectInfo" resultClass="rejectInfo">
+		SELECT tbl_user.userId, tbl_user.userName, tbl_user.userDepartment, tbl_user.userLevel, tbl_user.userType, tbl_approval.approvalTime, tbl_approval.pwdType, tbl_approval.approvalId, tbl_approval.rejectReason
+		FROM tbl_user INNER JOIN tbl_approval
+		ON tbl_user.userId = tbl_approval.userId AND approval = 0;
+	</select>	
+		 -->
+	<select id="getApprovalInfo" parameterClass="string" resultClass="approvalInfo">
+		SELECT tbl_user.userId, tbl_user.userName, tbl_user.userDepartment, tbl_user.userLevel, tbl_user.userType, tbl_request.requestDate, tbl_request.approvalDate, tbl_request.pwdType, tbl_request.approvalId, tbl_request.serverName, tbl_request.requestDesc, tbl_request.approved, tbl_request.connectId
+		FROM tbl_user INNER JOIN tbl_request
+		ON tbl_user.userId = tbl_request.userId
+		WHERE tbl_request.requestDate LIKE CONCAT('%',#value#,'%') OR tbl_request.approvalDate LIKE CONCAT('%',#value#,'%')
+		ORDER BY tbl_request.requestDate ASC
+	</select>
+		
+	<select id="getLogInfo" parameterClass="string" resultClass="logInfo">
+		SELECT tbl_user.userId, tbl_user.userName, tbl_user.userDepartment, tbl_user.userLevel, tbl_user.userType, tbl_log.loginTime, tbl_log.logoutTime
+		FROM tbl_user INNER JOIN tbl_log
+		ON tbl_user.userId = tbl_log.userId
+		WHERE tbl_log.loginTime LIKE CONCAT('%',#value#,'%')
+		ORDER BY tbl_log.loginTime ASC		
+	</select>
+	
+</sqlMap>

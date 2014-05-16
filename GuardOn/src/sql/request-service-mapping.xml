@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" 
+						"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Request">
+	<typeAlias alias="request" type="com.guardon.request.domain.Request" />
+
+	<resultMap class="request" id="resultRequest">
+		<result property="serverName" column="serverName" />
+		<result property="requestDesc" column="requestDesc" />
+		<result property="requestDate" column="requestDate" />
+		<result property="approvalDate" column="approvalDate" />
+		<result property="approvalId" column="approvalId" />
+		<result property="approved" column="approved" />
+		<result property="connectId" column="connectId" />
+		<result property="userId" column="userId" />
+		<result property="pwdType" column="pwdType" />
+		<result property="startDate" column="startDate" />
+		<result property="endDate" column="endDate" />
+		<result property="password" column="password" />
+	</resultMap>
+	
+	<select id="getEndDate" parameterClass="map" resultClass="string">
+		SELECT endDate ,MAX(requestNo)
+		FROM tbl_request
+		Where serverName=#serverName# AND connectId=#connectId# AND pwdType = 'period' AND approved='unchecked' AND endDate>=DATE_FORMAT(NOW(), '%Y-%m-%d')
+	</select>
+	
+	<select id="getPeriodPwd" parameterClass="map" resultClass="request">
+		SELECT serverName, approved, connectId, userId, startDate, endDate, password
+		FROM tbl_request
+		WHERE approved='approved' AND pwdType ='period' AND userId = #userId# AND endDate>=DATE_FORMAT(NOW(), '%Y-%m-%d')
+		GROUP BY serverName, connectId
+
+	</select>
+	
+	<insert id="insertRequest" parameterClass="request">
+		INSERT INTO
+		tbl_request(serverName, approved, connectId, requestDate, userId,
+		requestDesc, pwdType, startDate, endDate)
+		VALUES(#serverName#, 'unchecked', #connectId#,
+		#requestDate#, #userId#, #requestDesc#, #pwdType#, #startDate#, #endDate#);
+	</insert>
+
+	<select id="getApprovedList" parameterClass="int" resultClass="request">
+		SELECT serverName, requestDesc, connectId, userId, pwdType, startDate,
+		endDate
+		FROM tbl_request
+		WHERE approved= 'unchecked'
+	</select>
+
+	<select id="getOtpApproved" parameterClass="map" resultClass="string">		
+		SELECT approved
+		FROM tbl_request
+		WHERE requestNo =
+		(SELECT *
+		FROM (SELECT MAX(requestNo)
+		FROM tbl_request
+		WHERE serverName=#serverName# AND connectId=#connectId# AND userId=#userId# AND pwdType='OTP') AS r) 
+		
+	</select>
+	
+	<update id="updatePassword" parameterClass="map">
+		UPDATE tbl_request SET password=#password#
+		WHERE requestNo =
+		(SELECT *
+		FROM (SELECT MAX(requestNo)
+		FROM tbl_request
+		WHERE serverName=#serverName# AND connectId=#connectId# AND userId=#userId# AND pwdType='period'
+		AND approved='unchecked') AS r) 
+	</update>
+	
+
+	<update id="updateApproved" parameterClass="map">
+		UPDATE tbl_request SET approved='approved', approvalId=#approvalId#, approvalDate=#approvalDate#
+		WHERE requestNo =
+		(SELECT *
+		FROM (SELECT MAX(requestNo)
+		FROM tbl_request
+		WHERE serverName=#serverName# AND connectId=#connectId# AND userId=#userId#
+		AND approved='unchecked') AS r)
+	</update>
+
+	<update id="updateRejected" parameterClass="map">
+		UPDATE tbl_request SET approved='rejected', approvalId=#approvalId#, approvalDate=#approvalDate#
+		WHERE requestNo =
+		(SELECT *
+		FROM (SELECT MAX(requestNo)
+		FROM tbl_request
+		WHERE serverName=#serverName# AND connectId=#connectId# AND userId=#userId#
+		AND approved='unchecked') AS r)
+	</update>
+	
+	<update id="updateExpiration" parameterClass="map">
+		UPDATE tbl_request SET password='', approved='expired'
+		WHERE serverName=#serverName# AND connectId=#connectId# AND approved='approved'
+	</update>
+	
+	<select id="getApprovedReq" resultClass="request">
+		SELECT serverName, connectId, startDate, endDate, pwdType
+		FROM tbl_request		
+		GROUP BY serverName, connectId
+		
+	</select>
+	
+	<select id="checkDuplReq" parameterClass="map" resultClass="string">
+		SELECT COUNT(requestNo)
+		FROM tbl_request
+		Where serverName=#serverName# AND connectId=#connectId# AND approved IN ('approved', 'unchecked')
+	</select>
+	
+	<select id="getExpirePeriodPwdTarget" parameterClass="string" resultClass="request">
+		SELECT serverName, connectId
+		FROM tbl_request		
+		WHERE approved='approved' AND pwdType='period' AND endDate &lt; #value#
+	</select>
+	
+	<update id="expirePeriodPwd" parameterClass="string">
+		UPDATE tbl_request SET password='', approved='expired'
+		WHERE approved='approved' AND pwdType='period' AND endDate &lt; #value#
+	</update>
+	
+	<update id="expireOtpPwd" >
+		UPDATE tbl_request SET approved='expired'
+		WHERE approved='approved' AND pwdType='OTP'
+	</update>
+
+</sqlMap>

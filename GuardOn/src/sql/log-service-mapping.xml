@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" 
+						"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+						
+<sqlMap namespace="Log">
+	<typeAlias alias="log" type="com.guardon.log.domain.Log"/>
+	
+	<resultMap class="log" id="resultLog">
+		<result property="userId" column="userId" />
+		<result property="loginTime" column="loginTime" />
+		<result property="logoutTime" column="logoutTime" />
+		<result property="requestCount" column="requestCount" />
+		<result property="approvalCount" column="approvalCount" />
+		<result property="rejectCount" column="rejectCount" />		
+		
+	</resultMap>
+	
+	<insert id="setLoginTime" parameterClass="log">
+		INSERT INTO 
+		tbl_log(userId, loginTime)
+		VALUES(#userId#, #loginTime#)
+	</insert>
+	
+	<update id="setLogoutTime" parameterClass="log">
+		UPDATE tbl_log
+		SET logoutTime = #logoutTime#
+		WHERE userId = #userId#
+	</update>
+		
+</sqlMap>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "http://ibatis.apache.org/dtd/sql-map-2.dtd" 
+						"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+						
+<sqlMap namespace="Option">
+	<typeAlias alias="option" type="com.guardon.option.domain.Option"/>
+	
+	<resultMap class="option" id="resultOption">
+		<result property="pwdLevel" column="pwdLevel" />
+		<result property="pwdLength" column="pwdLength" />
+		<result property="otpTimeLimit" column="otpTimeLimit" />
+		<result property="loginFailedCount" column="loginFailedCount" />
+		<result property="pwdComplexity" column="pwdComplexity" />		
+	</resultMap>
+	
+	
+	<update id="updateOption" parameterClass="option">
+		UPDATE tbl_option
+		SET pwdLength = #pwdLength#
+		otpTimeLimit = #otpTimeLimit#
+		loginFailedCount = #loginFailedCount#
+		pwdComplexity = #pwdComplexity#
+	</update>
+	
+	<select id="getPwdLength">
+		SELECT pwdLength
+		FROM tbl_option
+	</select>
+	
+	<select id="getAutoLogout">
+		SELECT autoLogout
+		FROM tbl_option
+	</select>
+	
+	<select id="getOtpTimeLimit">
+		SELECT otpTimeLimit
+		FROM tbl_option
+	</select>
+	
+	<select id="getPwdComplexity">
+		SELECT 
+	</select>
+
+</sqlMap>
